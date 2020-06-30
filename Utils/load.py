@@ -157,7 +157,7 @@ def model(model_architecture, model_class):
     models = {
         'default' : default_models,
         'lottery' : lottery_models,
-        'tinyimagenet' : tinyimagenet_models,
+        'tiny-imagenet' : tinyimagenet_models,
         'imagenet' : imagenet_models
     }
     if model_class == 'imagenet':
