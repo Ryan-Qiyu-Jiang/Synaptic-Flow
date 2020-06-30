@@ -224,6 +224,6 @@ class Rand_Weighted(Pruner):
             sample_prob = (self.scores[id(p)] - min_score)/score_range
             sampled = torch.rand_like(sample_prob) < sample_prob
             self.scores[id(p)][sampled] += score_range
-            self.scores[id(p)][~sampled] -= score_range
+            # self.scores[id(p)][~sampled] -= score_range
 
         nonlinearize(model, signs)
