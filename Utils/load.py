@@ -171,6 +171,7 @@ def pruner(method):
         'snip' : pruners.SNIP,
         'grasp': pruners.GraSP,
         'synflow' : pruners.SynFlow,
+        'rand_weighted' : pruners.Rand_Weighted
     }
     return prune_methods[method]
 

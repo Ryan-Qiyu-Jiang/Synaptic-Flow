@@ -46,7 +46,7 @@ if __name__ == '__main__':
                         help='weight decay (default: 0.0)')
     # Pruning Hyperparameters
     pruning_args = parser.add_argument_group('pruning')
-    pruning_args.add_argument('--pruner', type=str, default='rand', choices=['rand','mag','snip','grasp','synflow'],
+    pruning_args.add_argument('--pruner', type=str, default='rand', choices=['rand','mag','snip','grasp','synflow', 'rand_weighted'],
                         help='prune strategy (default: rand)')
     pruning_args.add_argument('--sparsity', type=float, default=1.0,
                         help='fraction of non-zero parameters after pruning (default: 1.0)')

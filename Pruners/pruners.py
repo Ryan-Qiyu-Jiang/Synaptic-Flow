@@ -185,3 +185,45 @@ class SynFlow(Pruner):
 
         nonlinearize(model, signs)
 
+class Rand_Weighted(Pruner):
+    def __init__(self, masked_parameters):
+        super(Rand_Weighted, self).__init__(masked_parameters)
+
+    def score(self, model, loss, dataloader, device):
+      
+        @torch.no_grad()
+        def linearize(model):
+            signs = {}
+            for name, param in model.state_dict().items():
+                signs[name] = torch.sign(param)
+                param.abs_()
+            return signs
+
+        @torch.no_grad()
+        def nonlinearize(model, signs):
+            for name, param in model.state_dict().items():
+                param.mul_(signs[name])
+        
+        signs = linearize(model)
+
+        (data, _) = next(iter(dataloader))
+        input_dim = list(data[0,:].shape)
+        input = torch.ones([1] + input_dim).to(device)
+        output = model(input)
+        torch.sum(output).backward()
+        
+        max_score, min_score = 0, np.inf
+        for _, p in self.masked_parameters:
+            self.scores[id(p)] = torch.clone(p.grad * p).detach().abs_()
+            max_score = max(max_score, torch.max(self.scores[id(p)]))
+            min_score = min(min_score, torch.min(self.scores[id(p)]))
+            p.grad.data.zero_()
+        score_range = max_score - min_score
+        self.sparsified_graph_size = 0
+        for _, p in self.masked_parameters:
+            sample_prob = (self.scores[id(p)] - min_score)/score_range
+            sampled = torch.rand_like(sample_prob) < sample_prob
+            self.scores[id(p)][sampled] += score_range
+            self.scores[id(p)][~sampled] -= score_range
+
+        nonlinearize(model, signs)
