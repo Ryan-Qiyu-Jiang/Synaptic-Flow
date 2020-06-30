@@ -20,7 +20,7 @@ if __name__ == '__main__':
                         'wide-resnet18','wide-resnet20','wide-resnet32','wide-resnet34','wide-resnet44','wide-resnet50',
                         'wide-resnet56','wide-resnet101','wide-resnet110','wide-resnet110','wide-resnet152','wide-resnet1202'],
                         help='model architecture (default: fc)')
-    training_args.add_argument('--model-class', type=str, default='default', choices=['default','lottery','tinyimagenet','imagenet'],
+    training_args.add_argument('--model-class', type=str, default='default', choices=['default','lottery','tiny-imagenet','imagenet'],
                         help='model class (default: default)')
     training_args.add_argument('--dense-classifier', type=bool, default=False,
                         help='ensure last layer of model is dense (default: False)')
