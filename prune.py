@@ -29,7 +29,7 @@ def prune_loop(model, loss, pruner, dataloader, device,
 def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
-def rand_prune_loop(unpruned_model, loss, pruner, dataloader, device,
+def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
                sparsity, linear_schedule, scope, epochs, args, reinitialize=False, sample_number=None):
     r"""Applies score mask loop iteratively to a final sparsity level.
     """
@@ -37,11 +37,10 @@ def rand_prune_loop(unpruned_model, loss, pruner, dataloader, device,
     if sample_number is None:
         sample_number = 10
 
-    param_sampled_count= {}
-    model = copy.deepcopy(unpruned_model)
-    pruner = load.pruner('rand_weighted')(generator.masked_parameters(model, args.prune_bias, args.prune_batchnorm, args.prune_residual))
-    for _, p in pruner.masked_parameters:
-        param_sampled_count[id(p)] = torch.zeros_like(p)
+    # param_sampled_count= {}
+    # for _, p in main_pruner.masked_parameters:
+    #     param_sampled_count[id(p)] = torch.zeros_like(p)
+    param_sampled_count = [torch.zeros_like(p) for _, p in main_pruner.masked_parameters]
     
     for _ in tqdm(range(sample_number)):
         model = copy.deepcopy(unpruned_model)
@@ -57,12 +56,14 @@ def rand_prune_loop(unpruned_model, loss, pruner, dataloader, device,
             if epoch+1 < epochs:
                 pruner.mask(sparse, scope)
         
-        for mask, p in pruner.masked_parameters:
-            param_sampled_count[id(p)] += mask
+        for i, (mask, p) in enumerate(pruner.masked_parameters):
+            param_sampled_count[i] += mask
     
-    pruner.scores = param_sampled_count
-    pruner.mask(sparsity, scope)
-    pruner.apply_mask()
+    for i, (_, p) in enumerate(main_pruner.masked_parameters):
+        main_pruner.scores[id(p)] = param_sampled_count[i]
+    # main_pruner.scores = param_sampled_count
+    main_pruner.mask(sparsity, scope)
+    main_pruner.apply_mask()
 
     if reinitialize:
         model._initialize_weights()
