@@ -59,7 +59,9 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
         for i, (mask, p) in enumerate(pruner.masked_parameters):
             param_sampled_count[i] += mask
     
-    for i, (_, p) in enumerate(main_pruner.masked_parameters):
+    main_pruner.apply_mask()
+    for i, (m, p) in enumerate(main_pruner.masked_parameters):
+        print(param_sampled_count[i], m)
         main_pruner.scores[id(p)] = param_sampled_count[i]
     # main_pruner.scores = param_sampled_count
     main_pruner.mask(sparsity, scope)
