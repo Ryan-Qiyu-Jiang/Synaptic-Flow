@@ -42,8 +42,8 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
     #     param_sampled_count[id(p)] = torch.zeros_like(p)
     main_pruner.apply_mask()
     param_sampled_count = [torch.zeros_like(p) for _, p in main_pruner.masked_parameters]
-    zero = torch.tensor([0.]).to(mask.device)
-    one = torch.tensor([1.]).to(mask.device)
+    zero = torch.tensor([0.]).cuda()
+    one = torch.tensor([1.]).cuda()
     for _ in tqdm(range(sample_number)):
         model = copy.deepcopy(unpruned_model)
         pruner = load.pruner('rand_weighted')(generator.masked_parameters(model, args.prune_bias, args.prune_batchnorm, args.prune_residual))
