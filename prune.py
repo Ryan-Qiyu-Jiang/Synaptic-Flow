@@ -38,6 +38,8 @@ def rand_prune_loop(unpruned_model, loss, pruner, dataloader, device,
         sample_number = 10
 
     param_sampled_count= {}
+    model = copy.deepcopy(unpruned_model)
+    pruner = load.pruner('rand_weighted')(generator.masked_parameters(model, args.prune_bias, args.prune_batchnorm, args.prune_residual))
     for _, p in pruner.masked_parameters:
         param_sampled_count[id(p)] = torch.zeros_like(p)
     
