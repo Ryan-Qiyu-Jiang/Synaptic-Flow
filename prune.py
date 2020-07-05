@@ -42,10 +42,15 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
     # zero = torch.tensor([0.]).cuda()
     # one = torch.tensor([1.]).cuda()
     total_mse = 0
+    best_loss = float("Inf")
+
+    opt_class, opt_kwargs = load.optimizer(args.optimizer)
+
     for sample_iteration in tqdm(range(sample_number)):
         model = copy.deepcopy(unpruned_model)
         pruner = load.pruner('rand_weighted')(generator.masked_parameters(model, args.prune_bias, args.prune_batchnorm, args.prune_residual))
-        
+        optimizer = opt_class(generator.parameters(model), lr=args.lr, weight_decay=args.weight_decay, **opt_kwargs)
+
         for epoch in range(epochs):
             pruner.apply_mask()
             pruner.score(model, loss, dataloader, device)
@@ -56,15 +61,20 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
             if epoch+1 < epochs:
                 pruner.mask(sparse, scope)
 
+        train_loss = train(model, loss, optimizer, dataloader, device, 1, early_stop=5)
+        if train_loss < best_loss:
+            best_loss = train_loss
+            for i, (mask, p) in enumerate(pruner.masked_parameters):
+                param_sampled_count[i] = pruner.scores[id(p)]
+
         mse = 0
         for i, (mask, p) in enumerate(pruner.masked_parameters):
-            if sample_iteration > 0:
-                mse += ((param_sampled_count[i]/(sample_iteration+1) - pruner.scores[id(p)])**2).mean()
-            param_sampled_count[i] += pruner.scores[id(p)]
+            mse += ((param_sampled_count[i]/(sample_iteration+1) - pruner.scores[id(p)])**2).mean()
+            # param_sampled_count[i] += pruner.scores[id(p)]
         
         total_mse = (sample_iteration/(sample_iteration+1)) * total_mse + 1/(sample_iteration+1)*mse
         print('total_mse={}, mse={}'.format(total_mse, mse))
-        
+
     for i, (m, p) in enumerate(main_pruner.masked_parameters):
         main_pruner.scores[id(p)] = param_sampled_count[i]
     

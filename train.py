@@ -3,10 +3,12 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 
-def train(model, loss, optimizer, dataloader, device, epoch, verbose, log_interval=10):
+def train(model, loss, optimizer, dataloader, device, epoch, verbose, log_interval=10, early_stop=None):
     model.train()
     total = 0
     for batch_idx, (data, target) in enumerate(dataloader):
+        if early_stop is not None and batch_idx > early_stop:
+            break
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
         output = model(data)
