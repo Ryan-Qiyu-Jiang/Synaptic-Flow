@@ -68,6 +68,6 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
     if reinitialize:
         model._initialize_weights()
     # Confirm sparsity level
-    remaining_params, total_params = pruner.stats()
+    remaining_params, total_params = main_pruner.stats()
     if np.abs(remaining_params - total_params*sparsity) >= 1:
         print("ERROR: {} prunable parameters remaining, expected {}".format(remaining_params, total_params*sparsity))
