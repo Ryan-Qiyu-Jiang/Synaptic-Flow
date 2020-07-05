@@ -60,7 +60,6 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
             param_sampled_count[i] += pruner.scores[id(p)]
     
     for i, (m, p) in enumerate(main_pruner.masked_parameters):
-        print(torch.sum(param_sampled_count[i]), torch.sum(m))
         main_pruner.scores[id(p)] = param_sampled_count[i]
     
     main_pruner.mask(sparsity, scope)
