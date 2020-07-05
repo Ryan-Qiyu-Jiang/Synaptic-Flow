@@ -4,6 +4,7 @@ import numpy as np
 from Utils import load
 from Utils import generator
 import copy
+from train import *
 
 def prune_loop(model, loss, pruner, dataloader, device,
                sparsity, linear_schedule, scope, epochs, reinitialize=False):
