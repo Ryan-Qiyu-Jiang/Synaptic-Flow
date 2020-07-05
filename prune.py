@@ -62,7 +62,7 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
             if epoch+1 < epochs:
                 pruner.mask(sparse, scope)
 
-        train_loss = train(model, loss, optimizer, dataloader, device, 1, early_stop=5)
+        train_loss = train(model, loss, optimizer, dataloader, device, 1, early_stop=1)
         if train_loss < best_loss:
             best_loss = train_loss
             for i, (mask, p) in enumerate(pruner.masked_parameters):
@@ -74,7 +74,7 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
             # param_sampled_count[i] += pruner.scores[id(p)]
         
         total_mse = (sample_iteration/(sample_iteration+1)) * total_mse + 1/(sample_iteration+1)*mse
-        print('total_mse={}, mse={}'.format(total_mse, mse))
+        print('total_mse={}, mse={}, train_loss={}'.format(total_mse, mse, train_loss))
 
     for i, (m, p) in enumerate(main_pruner.masked_parameters):
         main_pruner.scores[id(p)] = param_sampled_count[i]
