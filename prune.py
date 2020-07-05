@@ -37,13 +37,11 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
     if sample_number is None:
         sample_number = 10
 
-    # param_sampled_count= {}
-    # for _, p in main_pruner.masked_parameters:
-    #     param_sampled_count[id(p)] = torch.zeros_like(p)
     main_pruner.apply_mask()
     param_sampled_count = [torch.zeros_like(p) for _, p in main_pruner.masked_parameters]
-    zero = torch.tensor([0.]).cuda()
-    one = torch.tensor([1.]).cuda()
+    # zero = torch.tensor([0.]).cuda()
+    # one = torch.tensor([1.]).cuda()
+
     for _ in tqdm(range(sample_number)):
         model = copy.deepcopy(unpruned_model)
         pruner = load.pruner('rand_weighted')(generator.masked_parameters(model, args.prune_bias, args.prune_batchnorm, args.prune_residual))
@@ -57,30 +55,13 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
                 sparse = sparsity**((epoch + 1) / epochs) # Exponential
             if epoch+1 < epochs:
                 pruner.mask(sparse, scope)
-        
-        a = [torch.sum(torch.where(score > 0, one, zero)) for score in param_sampled_count]
-        b = [torch.sum(m).detach().cpu().numpy() for m, p in pruner.masked_parameters]
-        sa = sum(a)
-        sb = sum(b)
-        print('expected:',sa, sb, sa+sb)
+
         for i, (mask, p) in enumerate(pruner.masked_parameters):
             param_sampled_count[i] += pruner.scores[id(p)]
-
-        b = [torch.sum(torch.where(score > 0, one, zero)) for score in param_sampled_count]
-        print('num > 0', sum(b))
-        # print(param_sampled_count[5])
-
-        a,b = pruner.stats()
-        print('remaining={}, total={}'.format(a,b))
     
     for i, (m, p) in enumerate(main_pruner.masked_parameters):
         print(torch.sum(param_sampled_count[i]), torch.sum(m))
         main_pruner.scores[id(p)] = param_sampled_count[i]
-    # main_pruner.scores = param_sampled_count
-    global_scores = torch.cat([torch.flatten(v) for v in main_pruner.scores.values()])
-    k = int((1.0 - sparsity) * global_scores.numel())
-    threshold, _ = torch.kthvalue(global_scores, k)
-    print('k=',k, 'thresh=',threshold)
     
     main_pruner.mask(sparsity, scope)
     main_pruner.apply_mask()
