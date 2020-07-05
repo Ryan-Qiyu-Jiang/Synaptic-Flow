@@ -42,7 +42,8 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
     #     param_sampled_count[id(p)] = torch.zeros_like(p)
     main_pruner.apply_mask()
     param_sampled_count = [torch.zeros_like(p) for _, p in main_pruner.masked_parameters]
-    
+    zero = torch.tensor([0.]).to(mask.device)
+    one = torch.tensor([1.]).to(mask.device)
     for _ in tqdm(range(sample_number)):
         model = copy.deepcopy(unpruned_model)
         pruner = load.pruner('rand_weighted')(generator.masked_parameters(model, args.prune_bias, args.prune_batchnorm, args.prune_residual))
@@ -66,6 +67,9 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
             param_sampled_count[i] += mask.detach()
         a = [torch.sum(c).detach().cpu().numpy() for c in param_sampled_count]
         print('actual', sum(a))
+        b = [torch.sum(torch.where(score <= 10, zero, one)) for score in param_sampled_count]
+        print('num < 10', b)
+
         a,b = pruner.stats()
         print('remaining={}, total={}'.format(a,b))
     
@@ -73,6 +77,11 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
         print(torch.sum(param_sampled_count[i]), torch.sum(m))
         main_pruner.scores[id(p)] = param_sampled_count[i]
     # main_pruner.scores = param_sampled_count
+    global_scores = torch.cat([torch.flatten(v) for v in main_pruner.scores.values()])
+    k = int((1.0 - sparsity) * global_scores.numel())
+    threshold, _ = torch.kthvalue(global_scores, k)
+    print('k=',k, 'thresh=',threshold)
+    
     main_pruner.mask(sparsity, scope)
     main_pruner.apply_mask()
 
