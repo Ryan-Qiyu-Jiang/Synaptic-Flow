@@ -57,8 +57,15 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
             if epoch+1 < epochs:
                 pruner.mask(sparse, scope)
         
+        a = [torch.sum(c).detach().cpu().numpy() for c in param_sampled_count]
+        b = [torch.sum(m).detach().cpu().numpy() for m, p in pruner.masked_parameters]
+        sa = sum(a)
+        sb = sum(b)
+        print('expected:',sa, sb, sa+sb)
         for i, (mask, p) in enumerate(pruner.masked_parameters):
             param_sampled_count[i] += mask.detach()
+        a = [torch.sum(c).detach().cpu().numpy() for c in param_sampled_count]
+        print('actual', sum(a))
         a,b = pruner.stats()
         print('remaining={}, total={}'.format(a,b))
     
