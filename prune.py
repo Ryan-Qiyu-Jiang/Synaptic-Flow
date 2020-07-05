@@ -35,14 +35,14 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
     """
     unpruned_model.eval()
     if sample_number is None:
-        sample_number = 10
+        sample_number = 100
 
     main_pruner.apply_mask()
     param_sampled_count = [torch.zeros_like(p) for _, p in main_pruner.masked_parameters]
     # zero = torch.tensor([0.]).cuda()
     # one = torch.tensor([1.]).cuda()
-
-    for _ in tqdm(range(sample_number)):
+    total_mse = 0
+    for sample_iteration in tqdm(range(sample_number)):
         model = copy.deepcopy(unpruned_model)
         pruner = load.pruner('rand_weighted')(generator.masked_parameters(model, args.prune_bias, args.prune_batchnorm, args.prune_residual))
         
@@ -56,9 +56,15 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
             if epoch+1 < epochs:
                 pruner.mask(sparse, scope)
 
+        mse = 0
         for i, (mask, p) in enumerate(pruner.masked_parameters):
+            if sample_iteration > 0:
+                mse += ((param_sampled_count[i]/(sample_iteration+1) - pruner.scores[id(p)])**2).mean()
             param_sampled_count[i] += pruner.scores[id(p)]
-    
+        
+        total_mse = (sample_iteration/(sample_iteration+1)) * total_mse + 1/(sample_iteration+1)*mse
+        print('total_mse={}, mse={}'.format(total_mse, mse))
+        
     for i, (m, p) in enumerate(main_pruner.masked_parameters):
         main_pruner.scores[id(p)] = param_sampled_count[i]
     
