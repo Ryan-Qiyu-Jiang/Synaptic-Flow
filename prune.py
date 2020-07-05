@@ -68,7 +68,8 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
         a = [torch.sum(c).detach().cpu().numpy() for c in param_sampled_count]
         print('actual', sum(a))
         b = [torch.sum(torch.where(score <= 10, zero, one)) for score in param_sampled_count]
-        print('num < 10', b)
+        print('num < 10', sum(b))
+        print(param_sampled_count[5])
 
         a,b = pruner.stats()
         print('remaining={}, total={}'.format(a,b))
