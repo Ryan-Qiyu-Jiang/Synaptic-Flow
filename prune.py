@@ -62,7 +62,7 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
             if epoch+1 < epochs:
                 pruner.mask(sparse, scope)
 
-        train_loss = train(model, loss, optimizer, dataloader, device, 1, early_stop=1)
+        train_loss = train(model, loss, optimizer, dataloader, device, 1, early_stop=5)
         if train_loss < best_loss:
             best_loss = train_loss
             for i, (mask, p) in enumerate(pruner.masked_parameters):
