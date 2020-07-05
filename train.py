@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np
 from tqdm import tqdm
 
-def train(model, loss, optimizer, dataloader, device, epoch, verbose, log_interval=10, early_stop=None):
+def train(model, loss, optimizer, dataloader, device, epoch, verbose=False, log_interval=10, early_stop=None):
     model.train()
     total = 0
     for batch_idx, (data, target) in enumerate(dataloader):
