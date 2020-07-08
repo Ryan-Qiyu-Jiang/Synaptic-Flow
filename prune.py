@@ -41,7 +41,6 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
         epsilon = args.epsilon
     
     main_pruner.apply_mask()
-    param_sampled_count = [torch.zeros_like(p) for _, p in main_pruner.masked_parameters]
     # zero = torch.tensor([0.]).cuda()
     # one = torch.tensor([1.]).cuda()
     total_mse = 0
@@ -58,6 +57,8 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
             sparse = sparsity**((epoch + 1) / epochs) # Exponential
 
         num_samples = 0
+        best_so_far = []
+        best_loss_so_far = float('Inf')
         for _ in (range(sample_number)):
             num_samples += 1
             model = copy.deepcopy(unpruned_model)
@@ -67,7 +68,7 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
             pruner.mask(sparse, scope)
             pruner.apply_mask()
             eval_loss = eval(model, loss, dataloader, device, 0, early_stop=5)[0]
-            if (eval_loss/last_loss - 1) < epsilon/epochs or num_samples==sample_number:
+            if (eval_loss/last_loss - 1) < epsilon/epochs:
                 last_loss = eval_loss
                 loss_graph += [last_loss]
                 for i, (mask, p) in enumerate(pruner.masked_parameters):
@@ -75,6 +76,17 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
                 main_pruner.apply_mask()
                     # param_sampled_count[i] = pruner.scores[id(p)]
                 break
+            if num_samples==sample_number:
+                last_loss = best_loss_so_far
+                loss_graph += [last_loss]
+                for i, mask in enumerate(best_so_far):
+                    main_pruner.masked_parameters[i][0].copy_(mask)
+                main_pruner.apply_mask()
+                break
+
+            if eval_loss < best_loss_so_far:
+                best_loss_so_far = eval_loss
+                best_so_far = [mask for mask, p in pruner.masked_parameters]
 
         # mse = 0
         # for i, (mask, p) in enumerate(pruner.masked_parameters):
@@ -82,7 +94,7 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
         #     # param_sampled_count[i] += pruner.scores[id(p)]
         
         # total_mse = (sample_iteration/(sample_iteration+1)) * total_mse + 1/(sample_iteration+1)*mse
-        print('sparsity={}, num_samples={}, loss={}'.format(sparse, num_samples, round(last_loss, 5)))
+        print('sparsity={}, num_samples={}, loss={}'.format(round(sparse, 3), num_samples, round(last_loss, 5)))
 
     # for i, (m, p) in enumerate(main_pruner.masked_parameters):
     #     main_pruner.scores[id(p)] = param_sampled_count[i]
