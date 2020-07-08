@@ -31,7 +31,7 @@ def count_parameters(model):
     return sum(p.numel() for p in model.parameters() if p.requires_grad)
 
 def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
-               sparsity, linear_schedule, scope, epochs, args, reinitialize=False, sample_number=None, epsilon=None):
+               sparsity, linear_schedule, scope, epochs, args, reinitialize=False, sample_number=None, epsilon=None, jitter=None):
     r"""Applies score mask loop iteratively to a final sparsity level.
     """
     unpruned_model.eval()
@@ -39,6 +39,8 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
         sample_number = args.max_samples
     if epsilon is None:
         epsilon = args.epsilon
+    if jitter is None:
+        jitter = args.jitter
     
     main_pruner.apply_mask()
     # zero = torch.tensor([0.]).cuda()
@@ -48,11 +50,17 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
     # opt_class, opt_kwargs = load.optimizer(args.optimizer)
     last_loss = eval(unpruned_model, loss, dataloader, device, 1, early_stop=5)[0]
     loss_graph = [last_loss]
-    
+    n, N = main_pruner.stats()
+    k = ticket_size = sparsity*N
+
     for epoch in tqdm(range(epochs)):
         # optimizer = opt_class(generator.parameters(model), lr=args.lr, weight_decay=args.weight_decay, **opt_kwargs)
         if linear_schedule:
-            sparse = 1.0 - (1.0 - sparsity)*((epoch + 1) / epochs) # Linear
+            # assume final sparsity is ticket size
+            prune_num = np.log(1/sample_number)/(np.log(n-k)-np.log(n))
+            sparse = (n-prune_num/2)/N
+            n = round(sparse*N)
+            #sparse = 1.0 - (1.0 - sparsity)*((epoch + 1) / epochs) # Linear
         else:
             sparse = sparsity**((epoch + 1) / epochs) # Exponential
 
@@ -64,7 +72,7 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
             model = copy.deepcopy(unpruned_model)
             pruner = load.pruner('rand_weighted')(generator.masked_parameters(model, args.prune_bias, args.prune_batchnorm, args.prune_residual))
             pruner.apply_mask()
-            pruner.score(model, loss, dataloader, device)
+            pruner.score(model, loss, dataloader, device, jitter=jitter)
             pruner.mask(sparse, scope)
             pruner.apply_mask()
             eval_loss = eval(model, loss, dataloader, device, 0, early_stop=5)[0]

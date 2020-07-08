@@ -95,6 +95,8 @@ if __name__ == '__main__':
                         help='max samples for random pruning (default: 100)')
     parser.add_argument('--epsilon', type=float, default=0.5,
                         help='smallest % increase in loss (default: 0.5)')
+    parser.add_argument('--jitter', type=float, default=0.1,
+                        help='smallest % increase in loss (default: 0.1)')
     args = parser.parse_args()
 
 

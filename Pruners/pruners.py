@@ -189,7 +189,7 @@ class Rand_Weighted(Pruner):
     def __init__(self, masked_parameters):
         super(Rand_Weighted, self).__init__(masked_parameters)
 
-    def score(self, model, loss, dataloader, device):
+    def score(self, model, loss, dataloader, device, jitter=0):
       
         @torch.no_grad()
         def linearize(model):
@@ -222,6 +222,7 @@ class Rand_Weighted(Pruner):
         self.sparsified_graph_size = 0
         for _, p in self.masked_parameters:
             sample_prob = (self.scores[id(p)] - min_score)/score_range
+            sample_prob = sample_prob + torch.randn_like(sample_prob)*jitter
             sampled = torch.rand_like(sample_prob) < sample_prob
             self.scores[id(p)][sampled] += score_range
             # self.scores[id(p)][~sampled] -= score_range
