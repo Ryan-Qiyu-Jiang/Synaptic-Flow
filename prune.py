@@ -69,7 +69,7 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
                 last_loss = eval_loss
                 loss_graph += [last_loss]
                 for i, (mask, p) in enumerate(pruner.masked_parameters):
-                    main_pruner.masked_parameters[i][0] = mask
+                    main_pruner.masked_parameters[i][0].copy_(mask)
                 main_pruner.apply_mask()
                     # param_sampled_count[i] = pruner.scores[id(p)]
                 break
