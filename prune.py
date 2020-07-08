@@ -5,6 +5,7 @@ from Utils import load
 from Utils import generator
 import copy
 from train import *
+import matplotlib.pyplot as plt
 
 def prune_loop(model, loss, pruner, dataloader, device,
                sparsity, linear_schedule, scope, epochs, reinitialize=False):
@@ -49,6 +50,7 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
 
     # opt_class, opt_kwargs = load.optimizer(args.optimizer)
     last_loss = eval(unpruned_model, loss, dataloader, device, 1, early_stop=5)[0]
+    sparsity_graph = [1]
     loss_graph = [last_loss]
     n, N = main_pruner.stats()
     k = ticket_size = sparsity*N
@@ -61,11 +63,14 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
             # assume final sparsity is ticket size
             if n == k:
                 break
-            prune_num = np.log(1/sample_number)/(np.log(n-k)-np.log(n))
-            sparse = (n-prune_num/2)/N
+            remaining_params, total_params = main_pruner.stats()
+            print(n, remaining_params)
+            prune_num = np.log(0.5/sample_number)/(np.log(n-k)-np.log(n))
+            sparse = (n-prune_num)/N
+            sparsity_graph += [sparse]
             if round(sparse*N) == n:
-                sparse = (n-1)/N
-                #break
+                #parse = (n-1)/N
+                break
             n = round(sparse*N)
             #sparse = 1.0 - (1.0 - sparsity)*((epoch + 1) / epochs) # Linear
         else:
@@ -73,7 +78,7 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
                 break
             sparse = sparsity**((epoch + 1) / epochs) # Exponential
 
-        num_samples = 0
+        num_samples = -1
         best_so_far = []
         best_loss_so_far = float('Inf')
         for _ in (range(sample_number)):
@@ -81,7 +86,7 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
             model = copy.deepcopy(unpruned_model)
             pruner = load.pruner('rand_weighted')(generator.masked_parameters(model, args.prune_bias, args.prune_batchnorm, args.prune_residual))
             pruner.apply_mask()
-            pruner.score(model, loss, dataloader, device, jitter=jitter)
+            pruner.score(model, loss, dataloader, device, jitter=num_samples/sample_number*jitter)
             pruner.mask(sparse, scope)
             pruner.apply_mask()
             eval_loss = eval(model, loss, dataloader, device, 0, early_stop=5)[0]
@@ -93,7 +98,7 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
                 main_pruner.apply_mask()
                     # param_sampled_count[i] = pruner.scores[id(p)]
                 break
-            if num_samples==sample_number:
+            if num_samples+1==sample_number:
                 last_loss = best_loss_so_far
                 loss_graph += [last_loss]
                 for i, mask in enumerate(best_so_far):
@@ -126,6 +131,7 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
     if np.abs(remaining_params - total_params*sparsity) >= 1:
         print("ERROR: {} prunable parameters remaining, expected {}".format(remaining_params, total_params*sparsity))
 
+    plt.plot(loss_graph)
     return loss_graph
 
 
