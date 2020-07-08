@@ -30,7 +30,7 @@ def eval(model, loss, dataloader, device, verbose, early_stop=None):
     with torch.no_grad():
         for batch_idx, (data, target) in enumerate(dataloader):
             if early_stop is not None and batch_idx > early_stop:
-                return total / batch_idx*256
+                return (total / batch_idx*256, -1, -1)
             data, target = data.to(device), target.to(device)
             output = model(data)
             total += loss(output, target).item() * data.size(0)

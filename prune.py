@@ -45,7 +45,7 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
     total_mse = 0
 
     # opt_class, opt_kwargs = load.optimizer(args.optimizer)
-    last_loss = eval(unpruned_model, loss, dataloader, device, 1, early_stop=5)
+    last_loss = eval(unpruned_model, loss, dataloader, device, 1, early_stop=5)[0]
     loss_graph = [last_loss]
     
     for epoch in tqdm(range(epochs)):
@@ -64,7 +64,7 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
             pruner.score(model, loss, dataloader, device)
             pruner.mask(sparse, scope)
             pruner.apply_mask()
-            eval_loss = eval(model, loss, dataloader, device, 1, early_stop=5)
+            eval_loss = eval(model, loss, dataloader, device, 0, early_stop=5)[0]
             if (eval_loss/last_loss - 1) < epsilon/epochs:
                 last_loss = eval_loss
                 loss_graph += [last_loss]
@@ -94,5 +94,7 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
     remaining_params, total_params = main_pruner.stats()
     if np.abs(remaining_params - total_params*sparsity) >= 1:
         print("ERROR: {} prunable parameters remaining, expected {}".format(remaining_params, total_params*sparsity))
+
+    return loss_graph
 
 
