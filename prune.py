@@ -81,7 +81,7 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
             model = copy.deepcopy(unpruned_model)
             pruner = load.pruner('rand_weighted')(generator.masked_parameters(model, args.prune_bias, args.prune_batchnorm, args.prune_residual))
             pruner.apply_mask()
-            pruner.score(model, loss, dataloader, device, jitter=(num_samples/sample_number)*jitter)
+            pruner.score(model, loss, dataloader, device, jitter=jitter)
             pruner.mask(sparse, scope)
             pruner.apply_mask()
             eval_loss = eval(model, loss, dataloader, device, 0, early_stop=5)[0]
