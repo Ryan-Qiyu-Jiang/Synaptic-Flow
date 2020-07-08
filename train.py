@@ -8,7 +8,7 @@ def train(model, loss, optimizer, dataloader, device, epoch, verbose=False, log_
     total = 0
     for batch_idx, (data, target) in enumerate(dataloader):
         if early_stop is not None and batch_idx > early_stop:
-            break
+            return total / batch_idx*64
         data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
         output = model(data)
@@ -22,13 +22,15 @@ def train(model, loss, optimizer, dataloader, device, epoch, verbose=False, log_
                 100. * batch_idx / len(dataloader), train_loss.item()))
     return total / len(dataloader.dataset)
 
-def eval(model, loss, dataloader, device, verbose):
+def eval(model, loss, dataloader, device, verbose, early_stop=None):
     model.eval()
     total = 0
     correct1 = 0
     correct5 = 0
     with torch.no_grad():
-        for data, target in dataloader:
+        for batch_idx, (data, target) in enumerate(dataloader):
+            if early_stop is not None and batch_idx > early_stop:
+                return total / batch_idx*256
             data, target = data.to(device), target.to(device)
             output = model(data)
             total += loss(output, target).item() * data.size(0)
