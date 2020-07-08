@@ -53,15 +53,24 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
     n, N = main_pruner.stats()
     k = ticket_size = sparsity*N
 
-    for epoch in tqdm(range(epochs)):
+    epoch = -1
+    while True:
+        epoch += 1
         # optimizer = opt_class(generator.parameters(model), lr=args.lr, weight_decay=args.weight_decay, **opt_kwargs)
         if linear_schedule:
             # assume final sparsity is ticket size
+            if n == k:
+                break
             prune_num = np.log(1/sample_number)/(np.log(n-k)-np.log(n))
             sparse = (n-prune_num/2)/N
+            if round(sparse*N) == n:
+                sparse = (n-1)/N
+                #break
             n = round(sparse*N)
             #sparse = 1.0 - (1.0 - sparsity)*((epoch + 1) / epochs) # Linear
         else:
+            if epoch == epochs:
+                break
             sparse = sparsity**((epoch + 1) / epochs) # Exponential
 
         num_samples = 0
