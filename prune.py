@@ -63,9 +63,8 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
             # assume final sparsity is ticket size
             if n == k:
                 break
-            remaining_params, total_params = main_pruner.stats()
-            print(n, remaining_params)
-            prune_num = np.log(0.5/sample_number)/(np.log(n-k)-np.log(n))
+            n, _ = main_pruner.stats()
+            prune_num = np.log(2/sample_number)/(np.log(n-k)-np.log(n))
             sparse = (n-prune_num)/N
             sparsity_graph += [sparse]
             if round(sparse*N) == n:
@@ -78,7 +77,7 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
                 break
             sparse = sparsity**((epoch + 1) / epochs) # Exponential
 
-        num_samples = -1
+        num_samples = 0
         best_so_far = []
         best_loss_so_far = float('Inf')
         for _ in (range(sample_number)):
@@ -86,7 +85,7 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
             model = copy.deepcopy(unpruned_model)
             pruner = load.pruner('rand_weighted')(generator.masked_parameters(model, args.prune_bias, args.prune_batchnorm, args.prune_residual))
             pruner.apply_mask()
-            pruner.score(model, loss, dataloader, device, jitter=num_samples/sample_number*jitter)
+            pruner.score(model, loss, dataloader, device, jitter=jitter)
             pruner.mask(sparse, scope)
             pruner.apply_mask()
             eval_loss = eval(model, loss, dataloader, device, 0, early_stop=5)[0]
@@ -98,7 +97,7 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
                 main_pruner.apply_mask()
                     # param_sampled_count[i] = pruner.scores[id(p)]
                 break
-            if num_samples+1==sample_number:
+            if num_samples==sample_number:
                 last_loss = best_loss_so_far
                 loss_graph += [last_loss]
                 for i, mask in enumerate(best_so_far):
