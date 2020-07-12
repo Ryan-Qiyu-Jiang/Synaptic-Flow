@@ -4,6 +4,7 @@ import os
 from Experiments import example
 from Experiments import singleshot
 from Experiments import lottery
+from Experiments import tinydense
 
 if __name__ == '__main__':
 
@@ -133,3 +134,5 @@ if __name__ == '__main__':
         singleshot.run(args)
     if args.experiment == 'lottery':
         lottery.run(args)
+    if args.experiment == 'tinydense':
+        tinydense.run(args)

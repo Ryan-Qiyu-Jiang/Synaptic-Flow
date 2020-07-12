@@ -226,5 +226,10 @@ class Rand_Weighted(Pruner):
             sampled = torch.rand_like(sample_prob) < sample_prob
             self.scores[id(p)][sampled] += score_range
             # self.scores[id(p)][~sampled] -= score_range
+            
+        all_scores = torch.cat([torch.flatten(v) for v in self.scores.values()])
+        norm = torch.sum(all_scores)
+        for _, p in self.masked_parameters:
+            self.scores[id(p)].div_(norm)
 
         nonlinearize(model, signs)
