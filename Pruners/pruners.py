@@ -218,6 +218,12 @@ class Rand_Weighted(Pruner):
             max_score = max(max_score, torch.max(self.scores[id(p)]))
             min_score = min(min_score, torch.min(self.scores[id(p)]))
             p.grad.data.zero_()
+
+        all_scores = torch.cat([torch.flatten(v) for v in self.scores.values()])
+        norm = torch.sum(all_scores)
+        for _, p in self.masked_parameters:
+            self.scores[id(p)].div_(norm)
+
         score_range = max_score - min_score
         self.sparsified_graph_size = 0
         for _, p in self.masked_parameters:
@@ -226,10 +232,10 @@ class Rand_Weighted(Pruner):
             sampled = torch.rand_like(sample_prob) < sample_prob
             self.scores[id(p)][sampled] += score_range
             # self.scores[id(p)][~sampled] -= score_range
-            
-        all_scores = torch.cat([torch.flatten(v) for v in self.scores.values()])
-        norm = torch.sum(all_scores)
-        for _, p in self.masked_parameters:
-            self.scores[id(p)].div_(norm)
+
+        # all_scores = torch.cat([torch.flatten(v) for v in self.scores.values()])
+        # norm = torch.sum(all_scores)
+        # for _, p in self.masked_parameters:
+        #     self.scores[id(p)].div_(norm)
 
         nonlinearize(model, signs)

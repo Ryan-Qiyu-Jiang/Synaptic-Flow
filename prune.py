@@ -87,7 +87,11 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
             pruner.apply_mask()
             pruner.score(model, loss, dataloader, device, jitter=jitter)
             pruner.mask(sparse, scope)
+            remaining_params, total_params = pruner.stats()
+            if remaining_params < total_params*sparse-5:
+                continue
             pruner.apply_mask()
+            
             eval_loss = eval(model, loss, dataloader, device, 0, early_stop=5)[0]
             if (eval_loss/last_loss - 1) < epsilon/epochs:
                 last_loss = eval_loss
