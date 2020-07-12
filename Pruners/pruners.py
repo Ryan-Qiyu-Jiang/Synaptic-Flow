@@ -230,7 +230,7 @@ class Rand_Weighted(Pruner):
             sample_prob = (self.scores[id(p)] - min_score)/score_range
             sample_prob = sample_prob + torch.randn_like(sample_prob)*jitter
             sampled = torch.rand_like(sample_prob) < sample_prob
-            self.scores[id(p)][sampled] += score_range
+            self.scores[id(p)][sampled] += score_range+torch.randn_like(sample_prob)*1e-5
             # self.scores[id(p)][~sampled] -= score_range
 
         # all_scores = torch.cat([torch.flatten(v) for v in self.scores.values()])
