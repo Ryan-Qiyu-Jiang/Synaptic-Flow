@@ -97,6 +97,10 @@ if __name__ == '__main__':
                         help='smallest % increase in loss (default: 0.5)')
     parser.add_argument('--jitter', type=float, default=0.1,
                         help='smallest % increase in loss (default: 0.1)')
+    parser.add_argument('--num-layers', type=int, default=5,
+                        help='num layers for tiny fc net (default: 5)')
+    parser.add_argument('--layer-width', type=int, default=10,
+                        help='layer width for tiny fc net (default: 10)')
     args = parser.parse_args()
 
 
