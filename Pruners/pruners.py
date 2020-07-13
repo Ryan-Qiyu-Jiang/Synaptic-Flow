@@ -225,9 +225,9 @@ class Rand_Weighted(Pruner):
             min_score = min(min_score, torch.min(self.scores[id(p)]))
 
         score_range = max_score - min_score
-        print('sr', norm, min_score, max_score, len(self.masked_parameters))
-        if min_score == np.inf:
-            print(torch.cat([torch.flatten(v) for v in self.scores.values()]))
+        # print('sr', norm, min_score, max_score, len(self.masked_parameters))
+        # if min_score == np.inf:
+        #     print(torch.cat([torch.flatten(v) for v in self.scores.values()]))
 
         self.sparsified_graph_size = 0
         for _, p in self.masked_parameters:
