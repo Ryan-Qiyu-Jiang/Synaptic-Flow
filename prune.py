@@ -82,7 +82,8 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
             model = copy.deepcopy(unpruned_model)
             pruner = load.pruner(main_pruner.name)(generator.masked_parameters(model, args.prune_bias, args.prune_batchnorm, args.prune_residual))
             pruner.apply_mask()
-            pruner.score(model, loss, dataloader, device, jitter=jitter)
+            pruner.jitter = jitter
+            pruner.score(model, loss, dataloader, device)
             pruner.mask(sparse, scope)
             remaining_params, total_params = pruner.stats()
             if remaining_params < total_params*sparse-5:

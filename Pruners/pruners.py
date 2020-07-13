@@ -195,8 +195,8 @@ class Rand_Weighted(Pruner):
         super(Rand_Weighted, self).__init__(masked_parameters)
         self.name = 'rand_weighted'
 
-    def score(self, model, loss, dataloader, device, jitter=0):
-      
+    def score(self, model, loss, dataloader, device):
+        jitter = self.jitter
         @torch.no_grad()
         def linearize(model):
             signs = {}
