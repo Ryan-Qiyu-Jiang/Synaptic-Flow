@@ -225,13 +225,14 @@ class Rand_Weighted(Pruner):
             min_score = min(min_score, torch.min(self.scores[id(p)]))
 
         score_range = max_score - min_score
+        print('sr', min_score, max_score, score_range)
         self.sparsified_graph_size = 0
         for _, p in self.masked_parameters:
             sample_prob = (self.scores[id(p)] - min_score)/score_range
             sample_prob = sample_prob + torch.randn_like(sample_prob)*jitter
             sampled = torch.rand_like(sample_prob) < sample_prob
             self.scores[id(p)][sampled] += score_range
-            self.scores[id(p)] += torch.randn_like(sample_prob)*1e-5
+            self.scores[id(p)] += torch.randn_like(sample_prob)*1e-3
             # self.scores[id(p)][~sampled] -= score_range
 
         # all_scores = torch.cat([torch.flatten(v) for v in self.scores.values()])
