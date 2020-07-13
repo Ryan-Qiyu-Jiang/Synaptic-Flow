@@ -46,9 +46,7 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
     main_pruner.apply_mask()
     # zero = torch.tensor([0.]).cuda()
     # one = torch.tensor([1.]).cuda()
-    total_mse = 0
 
-    # opt_class, opt_kwargs = load.optimizer(args.optimizer)
     last_loss = eval(unpruned_model, loss, dataloader, device, 1, early_stop=5)[0]
     sparsity_graph = [1]
     loss_graph = [last_loss]
@@ -58,7 +56,6 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
     epoch = -1
     while True:
         epoch += 1
-        # optimizer = opt_class(generator.parameters(model), lr=args.lr, weight_decay=args.weight_decay, **opt_kwargs)
         if linear_schedule:
             # assume final sparsity is ticket size
             if n == k:
@@ -83,7 +80,7 @@ def rand_prune_loop(unpruned_model, loss, main_pruner, dataloader, device,
         for _ in (range(sample_number)):
             num_samples += 1
             model = copy.deepcopy(unpruned_model)
-            pruner = load.pruner('rand_weighted')(generator.masked_parameters(model, args.prune_bias, args.prune_batchnorm, args.prune_residual))
+            pruner = load.pruner(main_pruner.name)(generator.masked_parameters(model, args.prune_bias, args.prune_batchnorm, args.prune_residual))
             pruner.apply_mask()
             pruner.score(model, loss, dataloader, device, jitter=jitter)
             pruner.mask(sparse, scope)
