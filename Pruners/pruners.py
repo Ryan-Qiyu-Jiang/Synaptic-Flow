@@ -220,8 +220,8 @@ class Rand_Weighted(Pruner):
         norm = torch.sum(all_scores)
         all_scores.div_(norm)
         max_score = torch.max(all_scores)
-        min_score = torch.min(torch.nonzero(all_scores))
-        avg_score = torch.mean(torch.nonzero(all_scores))
+        min_score = torch.min(all_scores[all_scores!=0])
+        avg_score = torch.mean(all_scores[all_scores!=0])
         for _, p in self.masked_parameters:
             self.scores[id(p)].div_(norm)
             # max_score = max(max_score, torch.max(self.scores[id(p)]))
