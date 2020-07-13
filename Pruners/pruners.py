@@ -218,14 +218,17 @@ class Rand_Weighted(Pruner):
 
         all_scores = torch.cat([torch.flatten(v) for v in self.scores.values()])
         norm = torch.sum(all_scores)
-        max_score, min_score = 0, np.inf
+        all_scores.div_(norm)
+        max_score = torch.max(all_scores)
+        min_score = torch.min(torch.nonzero(all_scores))
+        avg_score = torch.mean(torch.nonzero(all_scores))
         for _, p in self.masked_parameters:
             self.scores[id(p)].div_(norm)
-            max_score = max(max_score, torch.max(self.scores[id(p)]))
-            min_score = min(min_score, torch.min(self.scores[id(p)]))
+            # max_score = max(max_score, torch.max(self.scores[id(p)]))
+            # min_score = min(min_score, torch.min(torch.nonzero(self.scores[id(p)])))
 
         score_range = max_score - min_score
-        # print('sr', norm, min_score, max_score, len(self.masked_parameters))
+        print('sr', norm, min_score, max_score, len(self.masked_parameters))
         # if min_score == np.inf:
         #     print(torch.cat([torch.flatten(v) for v in self.scores.values()]))
 
