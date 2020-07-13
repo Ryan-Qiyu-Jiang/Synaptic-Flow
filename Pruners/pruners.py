@@ -228,7 +228,7 @@ class Rand_Weighted(Pruner):
             # min_score = min(min_score, torch.min(torch.nonzero(self.scores[id(p)])))
 
         score_range = max_score - min_score
-        # print('sr', norm, min_score, max_score, len(self.masked_parameters))
+        print('sr', norm, min_score, max_score, len(self.masked_parameters))
         # if min_score == np.inf:
         #     print(torch.cat([torch.flatten(v) for v in self.scores.values()]))
 
@@ -238,7 +238,7 @@ class Rand_Weighted(Pruner):
             sample_prob = sample_prob + torch.randn_like(sample_prob)*jitter
             sampled = torch.rand_like(sample_prob) < sample_prob
             self.scores[id(p)][sampled] += score_range
-            self.scores[id(p)] += torch.randn_like(p)*1e-10
+            self.scores[id(p)] += torch.randn_like(p)*min_score
             # self.scores[id(p)][~sampled] -= score_range
 
         # all_scores = torch.cat([torch.flatten(v) for v in self.scores.values()])
