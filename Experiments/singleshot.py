@@ -60,6 +60,7 @@ def run(args):
                 sparsity = 10**(-float(exp))
                 
                 if p == 'rand_weighted' and p == 'sf' and p=='synflow':
+                    print('rand prune')
                     rand_prune_loop(model, loss, pruner, prune_loader, device, sparsity,
                                args.linear_compression_schedule, args.mask_scope, args.prune_epochs, args, args.reinitialize)
                 elif p == 'sf' or p == 'rand_weighted' or p=='synflow' or p=='snip':
