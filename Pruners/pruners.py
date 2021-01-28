@@ -64,6 +64,37 @@ class Pruner:
              total_params += mask.numel()
         return remaining_params, total_params
 
+    @torch.no_grad()
+    def get_input_weight(self):
+        r"""Gets the total input weight per node.
+        """
+        input_weight = {}
+        for _, p in self.masked_parameters:
+            # param is [out x in], rows are weights for node i
+            input_weight[id(p)] = torch.sum(p, dim=1)
+        return input_weight
+
+    @torch.no_grad()
+    def scale_params(self, prev_weights, cur_weights):
+        r"""Rescale node inputs to same val
+        """
+        for _, p in self.masked_parameters:
+            # param is [out x in], rows are weights for node i
+            prev = prev_weights[id(p)]
+            cur = cur_weights[id(p)]
+            scale = prev/cur
+            p.mul_(scale[:, None])
+
+    @torch.no_grad()
+    def param_sum(self):
+        r"""Gets the total input weight per node.
+        """
+        s = 0
+        for _, p in self.masked_parameters:
+            # param is [out x in], rows are weights for node i
+            s += p.sum()
+        return s
+
 
 class Rand(Pruner):
     def __init__(self, masked_parameters):
