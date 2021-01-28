@@ -65,10 +65,10 @@ def run(args):
                     rand_prune_loop(model, loss, pruner, prune_loader, device, sparsity,
                                args.linear_compression_schedule, args.mask_scope, args.prune_epochs, args, args.reinitialize)
                 elif p == 'sf' or p=='synflow' or p=='snip':
-                    prune_loop(model, loss, pruner, prune_loader, device, sparsity,
+                    approx_prune_loop(model, loss, pruner, prune_loader, device, sparsity,
                                args.linear_compression_schedule, args.mask_scope, args.prune_epochs, args.reinitialize)
                 else:
-                    prune_loop(model, loss, pruner, prune_loader, device, sparsity,
+                    approx_prune_loop(model, loss, pruner, prune_loader, device, sparsity,
                                args.linear_compression_schedule, args.mask_scope, 1, args.reinitialize)     
                     
                 prune_result = metrics.summary(model, 
