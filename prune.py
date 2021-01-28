@@ -36,7 +36,9 @@ def approx_prune_loop(model, loss, pruner, dataloader, device,
     prev_weights = {}
     cur_weights = {}
     for epoch in tqdm(range(epochs)):
-        print("cum_sum", pruner.param_sum())
+        eval_loss = eval(model, loss, dataloader, device, 0, early_stop=5)[0]
+        print("cum_sum:{}, loss: {}".format(pruner.param_sum().item(), eval_loss))
+
         prev_weights = pruner.get_input_weight()
         pruner.apply_mask()
         cur_weights = pruner.get_input_weight()
