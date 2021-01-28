@@ -82,7 +82,7 @@ class Pruner:
             # param is [out x in], rows are weights for node i
             prev = prev_weights[id(p)]
             cur = cur_weights[id(p)]
-            cur[cur==0] = 1 # 
+            cur[cur==0] = 0.01 # don't do prev/0*0
             scale = prev/cur
             p.mul_(scale[:, None])
 

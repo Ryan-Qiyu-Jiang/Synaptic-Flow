@@ -13,7 +13,10 @@ def prune_loop(model, loss, pruner, dataloader, device,
     """
     model.eval()
     for epoch in tqdm(range(epochs)):
+        eval_loss = eval(model, loss, dataloader, device, 0, early_stop=5)[0]
+        print("cum_sum:{}, loss: {}".format(pruner.param_sum().item(), eval_loss))
         pruner.apply_mask()
+        
         pruner.score(model, loss, dataloader, device)
         if linear_schedule:
             sparse = 1.0 - (1.0 - sparsity)*((epoch + 1) / epochs) # Linear

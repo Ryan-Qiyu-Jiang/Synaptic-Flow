@@ -59,10 +59,10 @@ def run(args):
                 pruner = load.pruner(p)(generator.masked_parameters(model, args.prune_bias, args.prune_batchnorm, args.prune_residual))
                 sparsity = 10**(-float(exp))
                 
-                if p == 'rand_weighted' or p == 'sf' or p=='synflow':
+                if p == 'rand_weighted':
                     rand_prune_loop(model, loss, pruner, prune_loader, device, sparsity,
                                args.linear_compression_schedule, args.mask_scope, args.prune_epochs, args, args.reinitialize)
-                elif p == 'sf' or p == 'rand_weighted' or p=='synflow' or p=='snip':
+                elif p == 'sf' p=='synflow' or p=='snip':
                     prune_loop(model, loss, pruner, prune_loader, device, sparsity,
                                args.linear_compression_schedule, args.mask_scope, args.prune_epochs, args.reinitialize)
                 else:
