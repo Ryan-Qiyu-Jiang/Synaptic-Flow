@@ -73,6 +73,8 @@ if __name__ == '__main__':
                         help='list of compression ratio exponents for singleshot (default: [])')
     pruning_args.add_argument('--reinitialize', type=bool, default=False,
                         help='whether to reinitialize weight parameters after pruning (default: False)')
+    parser.add_argument('--prune-loop', type=str, default='default',
+                        help='pruning loop type')
     ## Experiment Hyperparameters ##
     parser.add_argument('--experiment', type=str, default='example',
                         help='experiment name (default: example)')
@@ -90,7 +92,6 @@ if __name__ == '__main__':
                         help='random seed (default: 1)')
     parser.add_argument('--verbose', action='store_true',
                         help='print statistics during training and testing')
-
 
     parser.add_argument('--max-samples', type=int, default=100,
                         help='max samples for random pruning (default: 100)')

@@ -50,6 +50,13 @@ def run(args):
     ## Prune and Fine-Tune##
     pruners = args.pruner_list
     comp_exponents = args.compression_list
+    if args.prune_loop == 'rand':
+        prune_loop_fun = rand_prune_loop
+    elif args.prune_loop == 'approx':
+        prune_loop_fun = approx_prune_loop
+    else:
+        prune_loop_fun = prune_loop
+
     for j, exp in enumerate(comp_exponents[::-1]):
         for i, p in enumerate(pruners):
                 print(p, exp)
@@ -62,13 +69,13 @@ def run(args):
                 sparsity = 10**(-float(exp))
                 
                 if p == 'rand_weighted':
-                    rand_prune_loop(model, loss, pruner, prune_loader, device, sparsity,
+                    prune_loop_fun(model, loss, pruner, prune_loader, device, sparsity,
                                args.linear_compression_schedule, args.mask_scope, args.prune_epochs, args, args.reinitialize)
                 elif p == 'sf' or p=='synflow' or p=='snip':
-                    approx_prune_loop(model, loss, pruner, prune_loader, device, sparsity,
+                    prune_loop_fun(model, loss, pruner, prune_loader, device, sparsity,
                                args.linear_compression_schedule, args.mask_scope, args.prune_epochs, args.reinitialize)
                 else:
-                    approx_prune_loop(model, loss, pruner, prune_loader, device, sparsity,
+                    prune_loop_fun(model, loss, pruner, prune_loader, device, sparsity,
                                args.linear_compression_schedule, args.mask_scope, 1, args.reinitialize)     
                     
                 prune_result = metrics.summary(model, 
