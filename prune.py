@@ -11,6 +11,7 @@ def prune_loop(model, loss, pruner, dataloader, device,
                sparsity, linear_schedule, scope, epochs, reinitialize=False):
     r"""Applies score mask loop iteratively to a final sparsity level.
     """
+    print("default prune loop")
     model.eval()
     for epoch in tqdm(range(epochs)):
         eval_loss = eval(model, loss, dataloader, device, 0, early_stop=5)[0]
@@ -37,6 +38,7 @@ def approx_prune_loop(model, loss, pruner, dataloader, device,
                sparsity, linear_schedule, scope, epochs, reinitialize=False):
     r"""Applies score mask loop iteratively to a final sparsity level.
     """
+    print("approx_prune_loop")
     model.eval()
     prev_weights = {}
     cur_weights = {}
