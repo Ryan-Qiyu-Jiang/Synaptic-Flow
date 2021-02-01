@@ -15,20 +15,27 @@ def prune_loop(model, loss, pruner, dataloader, device,
     model.eval()
     for epoch in tqdm(range(epochs)):
         eval_loss = eval(model, loss, dataloader, device, 0, early_stop=5)[0]
-        print("cum_sum:{}, loss: {}".format(pruner.param_sum().item(), eval_loss))
+        print("1cum_sum:{}, loss: {}".format(pruner.param_sum().item(), eval_loss))
         pruner.apply_mask()
-        
+
+        eval_loss = eval(model, loss, dataloader, device, 0, early_stop=5)[0]
+        print("2cum_sum:{}, loss: {}".format(pruner.param_sum().item(), eval_loss))        
+
         pruner.score(model, loss, dataloader, device)
+        eval_loss = eval(model, loss, dataloader, device, 0, early_stop=5)[0]
+        print("3cum_sum:{}, loss: {}".format(pruner.param_sum().item(), eval_loss))
         if linear_schedule:
             sparse = 1.0 - (1.0 - sparsity)*((epoch + 1) / epochs) # Linear
         else:
             sparse = sparsity**((epoch + 1) / epochs) # Exponential
         pruner.mask(sparse, scope)
+    
     if reinitialize:
+        print('reinitialize')
         model._initialize_weights()
 
     eval_loss = eval(model, loss, dataloader, device, 0, early_stop=5)[0]
-    print("cum_sum:{}, loss: {}".format(pruner.param_sum().item(), eval_loss))
+    print("4cum_sum:{}, loss: {}".format(pruner.param_sum().item(), eval_loss))
     # Confirm sparsity level
     remaining_params, total_params = pruner.stats()
     if np.abs(remaining_params - total_params*sparsity) >= 1:
