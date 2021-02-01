@@ -26,6 +26,8 @@ def prune_loop(model, loss, pruner, dataloader, device,
     if reinitialize:
         model._initialize_weights()
 
+    eval_loss = eval(model, loss, dataloader, device, 0, early_stop=5)[0]
+    print("cum_sum:{}, loss: {}".format(pruner.param_sum().item(), eval_loss))
     # Confirm sparsity level
     remaining_params, total_params = pruner.stats()
     if np.abs(remaining_params - total_params*sparsity) >= 1:
@@ -56,6 +58,8 @@ def approx_prune_loop(model, loss, pruner, dataloader, device,
     if reinitialize:
         model._initialize_weights()
 
+    eval_loss = eval(model, loss, dataloader, device, 0, early_stop=5)[0]
+    print("cum_sum:{}, loss: {}".format(pruner.param_sum().item(), eval_loss))
     # Confirm sparsity level
     remaining_params, total_params = pruner.stats()
     if np.abs(remaining_params - total_params*sparsity) >= 1:
