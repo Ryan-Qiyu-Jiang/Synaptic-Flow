@@ -15,8 +15,8 @@ def prune_loop(model, loss, pruner, dataloader, device,
     model.eval()
     for epoch in tqdm(range(epochs)):
         eval_loss = eval(model, loss, dataloader, device, 0, early_stop=5)[0]
-        print("1cum_sum:{}, loss: {}".format(pruner.param_sum().item(), eval_loss))
-        pruner.apply_mask()        
+        print("cum_sum:{}, loss: {}".format(pruner.param_sum().item(), eval_loss))
+        # pruner.apply_mask()        
 
         pruner.score(model, loss, dataloader, device)
         if linear_schedule:
@@ -24,15 +24,14 @@ def prune_loop(model, loss, pruner, dataloader, device,
         else:
             sparse = sparsity**((epoch + 1) / epochs) # Exponential
         pruner.mask(sparse, scope)
+        pruner.apply_mask()
         eval_loss = eval(model, loss, dataloader, device, 0, early_stop=5)[0]
-        print("2cum_sum:{}, loss: {}".format(pruner.param_sum().item(), eval_loss))
-    
+        print("cum_sum:{}, loss: {}".format(pruner.param_sum().item(), eval_loss))
+
     if reinitialize:
         print('reinitialize')
         model._initialize_weights()
 
-    eval_loss = eval(model, loss, dataloader, device, 0, early_stop=5)[0]
-    print("3cum_sum:{}, loss: {}".format(pruner.param_sum().item(), eval_loss))
     # Confirm sparsity level
     remaining_params, total_params = pruner.stats()
     if np.abs(remaining_params - total_params*sparsity) >= 1:
@@ -50,17 +49,18 @@ def approx_prune_loop(model, loss, pruner, dataloader, device,
         eval_loss = eval(model, loss, dataloader, device, 0, early_stop=5)[0]
         print("cum_sum:{}, loss: {}".format(pruner.param_sum().item(), eval_loss))
 
-        prev_weights = pruner.get_input_weight()
-        pruner.apply_mask()
-        cur_weights = pruner.get_input_weight()
-        pruner.scale_params(prev_weights, cur_weights)
-
         pruner.score(model, loss, dataloader, device)
         if linear_schedule:
             sparse = 1.0 - (1.0 - sparsity)*((epoch + 1) / epochs) # Linear
         else:
             sparse = sparsity**((epoch + 1) / epochs) # Exponential
+        
         pruner.mask(sparse, scope)
+        prev_weights = pruner.get_input_weight()
+        pruner.apply_mask()
+        cur_weights = pruner.get_input_weight()
+        pruner.scale_params(prev_weights, cur_weights)
+
     if reinitialize:
         model._initialize_weights()
 
