@@ -25,12 +25,13 @@ def prune_loop(model, loss, pruner, dataloader, device,
             sparse = sparsity**((epoch + 1) / epochs) # Exponential
         pruner.mask(sparse, scope)
         pruner.apply_mask()
-        eval_loss = eval(model, loss, dataloader, device, 0, early_stop=5)[0]
-        print("cum_sum:{}, loss: {}".format(pruner.param_sum().item(), eval_loss))
 
     if reinitialize:
         print('reinitialize')
         model._initialize_weights()
+
+    eval_loss = eval(model, loss, dataloader, device, 0, early_stop=5)[0]
+    print("cum_sum:{}, loss: {}".format(pruner.param_sum().item(), eval_loss))
 
     # Confirm sparsity level
     remaining_params, total_params = pruner.stats()
